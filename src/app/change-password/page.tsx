@@ -16,8 +16,8 @@ export default function ChangePassword() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
+    const stored = localStorage.getItem('adminData');
+    if (!stored) {
       router.push('/');
     }
   }, [router]);
@@ -40,7 +40,6 @@ export default function ChangePassword() {
       });
 
       // Cambio exitoso: limpiar sesión y volver al login para que se loguee con la nueva
-      localStorage.removeItem('adminToken');
       localStorage.removeItem('adminData');
       router.push('/');
     } catch (err: unknown) {
