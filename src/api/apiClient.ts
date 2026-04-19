@@ -13,7 +13,7 @@ export function getAccessToken() {
   return accessToken;
 }
 
-export const apiClient = axios.create({
+const apiClient = axios.create({
   baseURL,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true, // Envía cookies (adminRefreshToken) en cada request
@@ -46,6 +46,15 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+    // 403 por contraseña temporal no cambiada → redirigir a /change-password
+    if (error.response?.status === 403) {
+      const msg = (error.response.data as { error?: string })?.error ?? '';
+      if (msg.includes('contraseña temporal') && typeof window !== 'undefined') {
+        window.location.href = '/change-password';
+      }
+      return Promise.reject(error);
+    }
 
     // Si no es 401 o ya es un retry, propagar el error
     if (error.response?.status !== 401 || originalRequest._retry) {
@@ -103,3 +112,5 @@ apiClient.interceptors.response.use(
     }
   }
 );
+
+export default apiClient;
