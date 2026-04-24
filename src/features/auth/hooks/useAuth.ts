@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { apiClient } from '@/api/apiClient';
-import { setAccessToken } from '@/api/apiClient';
+import apiClient, { setAccessToken } from '@/api/apiClient';
 import type { AdminUser, LoginResponse, ApiError } from '../types';
 
 export function useAuth() {
