@@ -1,4 +1,4 @@
-// File: C:\Users\delfi\OneDrive\Documents\taller-software\backoffice-front\src\app\layout.tsx
+// File: /Users/tomascarrie/Library/Mobile Documents/com~apple~CloudDocs/Proyecto final TDS/backoffice-front/src/app/layout.tsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
