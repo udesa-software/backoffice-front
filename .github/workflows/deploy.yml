@@ -40,7 +40,7 @@ jobs:
           
       - name: Sync to S3
         run: |
-          aws s3 sync dist/ s3://tds-group-3-frontend/ --delete
+          aws s3 sync out/ s3://tds-group-3-frontend/ --delete
           
       - name: Invalidate CloudFront cache
         run: |
