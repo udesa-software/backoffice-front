@@ -36,7 +36,14 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_API_URL: https://tds-group-3.tds-linar.udesa.edu.ar
+          NEXT_PUBLIC_API_URL: https://tds-group-3.tds-linar.udesa.edu.ar
           
-      # Note: S3 sync removed as deployment is moving to K8s.
-      # You should add Docker build and push steps here.
+      - name: Sync to S3
+        run: |
+          aws s3 sync out/ s3://tds-group-3-frontend/ --delete
+          
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
