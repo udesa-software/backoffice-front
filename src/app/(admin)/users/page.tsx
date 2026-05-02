@@ -115,7 +115,7 @@ export default function UsersPage() {
                 <td className="px-5 py-3.5 text-gray-500">{formatDate(u.last_login_at)}</td>
                 <td className="px-5 py-3.5 text-right">
                   <Link
-                    href={`/users/${u.id}`}
+                    href={`/users/detail?id=${u.id}`}
                     className="text-[#6C63FF] text-xs font-medium hover:underline"
                   >
                     Ver detalle →
