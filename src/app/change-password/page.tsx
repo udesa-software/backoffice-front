@@ -59,9 +59,9 @@ export default function ChangePassword() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {[
-            { id: 'cur',  label: 'Contraseña actual',          val: currentPassword,  set: setCurrentPassword },
-            { id: 'new',  label: 'Nueva contraseña',           val: newPassword,      set: setNewPassword },
-            { id: 'conf', label: 'Confirmar nueva contraseña', val: confirmPassword,  set: setConfirmPassword },
+            { id: 'cur', label: 'Contraseña actual', val: currentPassword, set: setCurrentPassword },
+            { id: 'new', label: 'Nueva contraseña', val: newPassword, set: setNewPassword },
+            { id: 'conf', label: 'Confirmar nueva contraseña', val: confirmPassword, set: setConfirmPassword },
           ].map(({ id, label, val, set }) => (
             <div key={id}>
               <label className="block text-sm font-medium text-white/70 mb-1">{label}</label>
