@@ -8,6 +8,7 @@ export interface AppUser {
   email: string;
   is_verified: boolean;
   is_suspended: boolean;
+  under_review: boolean;
   deleted_at: string | null;
   created_at: string;
   last_login_at: string | null;
@@ -62,6 +63,10 @@ export const suspendUser = (id: string, reason: string) =>
 
 export const unsuspendUser = (id: string, reason?: string) =>
   apiClient.post(`/api/admin/users/${id}/unsuspend`, { reason }).then(r => r.data);
+
+// H9: resolver revisión automática generada por reportes de usuarios
+export const resolveUserReview = (id: string, reason?: string) =>
+  apiClient.post(`/api/admin/users/${id}/resolve-review`, { reason }).then(r => r.data);
 
 // ── Métricas (H3) ─────────────────────────────────────────────────────────────
 
