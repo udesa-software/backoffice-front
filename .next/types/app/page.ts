@@ -1,4 +1,4 @@
-// File: /Users/tomascarrie/Library/Mobile Documents/com~apple~CloudDocs/Proyecto final TDS/backoffice-front/src/app/page.tsx
+// File: /Users/glewit/Documents/Udesa/5to/taller_software/users/udesamigos/backoffice-front/src/app/page.tsx
 import * as entry from '../../../src/app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

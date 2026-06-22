@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { fetchUser, suspendUser, unsuspendUser, type AppUser } from '@/api/admin';
+import { fetchUser, suspendUser, unsuspendUser, resolveUserReview, type AppUser } from '@/api/admin';
 
 function Detail({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -113,6 +113,21 @@ export default function UserDetailClient() {
     }
   }
 
+  async function handleResolveReview() {
+    if (!id) return;
+    setActionLoading(true);
+    try {
+      await resolveUserReview(id);
+      const updated = await fetchUser(id);
+      setUser(updated);
+      setMessage({ type: 'ok', text: 'Revisión resuelta. El usuario puede volver a iniciar sesión.' });
+    } catch {
+      setMessage({ type: 'err', text: 'Error al resolver la revisión' });
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -132,11 +147,13 @@ export default function UserDetailClient() {
 
   const statusLabel = user.deleted_at ? 'Eliminado'
     : user.is_suspended ? 'Suspendido'
+    : user.under_review ? 'En revisión'
     : !user.is_verified ? 'Sin verificar'
     : 'Activo';
 
   const statusColor = user.deleted_at ? 'bg-gray-100 text-gray-500'
     : user.is_suspended ? 'bg-red-100 text-red-700'
+    : user.under_review ? 'bg-orange-100 text-orange-700'
     : !user.is_verified ? 'bg-yellow-100 text-yellow-700'
     : 'bg-green-100 text-green-700';
 
@@ -206,6 +223,15 @@ export default function UserDetailClient() {
                 className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-40"
               >
                 Suspender usuario
+              </button>
+            )}
+            {user.under_review && (
+              <button
+                onClick={handleResolveReview}
+                disabled={actionLoading}
+                className="px-4 py-2 text-sm rounded-lg bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-40"
+              >
+                {actionLoading ? 'Procesando...' : 'Resolver revisión'}
               </button>
             )}
           </div>
