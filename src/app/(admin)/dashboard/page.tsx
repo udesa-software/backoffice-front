@@ -104,7 +104,7 @@ export default function DashboardPage() {
       ) : metrics && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <MetricCard label="Usuarios totales" value={metrics.total_users} />
-          <MetricCard label="Altas este mes" value={metrics.new_this_month} />
+          <MetricCard label="Altas últimos 30 días" value={metrics.new_this_month} />
           <MetricCard label="Altas esta semana" value={metrics.new_this_week} />
           <MetricCard label="Online ahora" value={metrics.online_now} sub="activos en últimos 15 min" />
         </div>
