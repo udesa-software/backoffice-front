@@ -11,7 +11,11 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
-      include: ['src/components/Button.tsx', 'src/components/Input.tsx'],
+      include: [
+        'src/components/Button.tsx',
+        'src/components/Input.tsx',
+        'src/app/(admin)/reports/page.tsx',
+      ],
       exclude: ['src/**/*.d.ts'],
       thresholds: {
         branches: 85,

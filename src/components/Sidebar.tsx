@@ -7,8 +7,9 @@ import apiClient from '@/api/apiClient';
 
 const NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: '▦' },
-  { href: '/users',     label: 'Usuarios',   icon: '👥' },
-  { href: '/admins',    label: 'Admins',      icon: '🛡' },
+  { href: '/users',     label: 'Usuarios',  icon: '👥' },
+  { href: '/reports',   label: 'Denuncias', icon: '🚩' },
+  { href: '/admins',    label: 'Admins',    icon: '🛡' },
 ];
 
 export default function Sidebar() {
