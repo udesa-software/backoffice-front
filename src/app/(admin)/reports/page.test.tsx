@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import ReportsPage from './page';
 
@@ -11,20 +11,20 @@ vi.mock('next/navigation', () => ({
 // API functions
 vi.mock('@/api/admin', () => ({
   fetchReports:        vi.fn(),
-  discardReports:      vi.fn(),
+  discardReport:       vi.fn(),
   suspendFromReports:  vi.fn(),
   resolveReports:      vi.fn(),
 }));
 
 import {
   fetchReports,
-  discardReports,
+  discardReport,
   suspendFromReports,
   resolveReports,
 } from '@/api/admin';
 
 const mockFetchReports       = fetchReports       as ReturnType<typeof vi.fn>;
-const mockDiscardReports     = discardReports     as ReturnType<typeof vi.fn>;
+const mockDiscardReport      = discardReport      as ReturnType<typeof vi.fn>;
 const mockSuspendFromReports = suspendFromReports as ReturnType<typeof vi.fn>;
 const mockResolveReports     = resolveReports     as ReturnType<typeof vi.fn>;
 
@@ -94,16 +94,26 @@ describe('ReportsPage', () => {
     });
   });
 
-  it('muestra los botones de acción Descartar, Suspender y Resolver caso', async () => {
+  it('muestra los botones de acción Suspender y Resolver caso a nivel de grupo', async () => {
     mockFetchReports.mockResolvedValue(SAMPLE_PAGE);
 
     render(<ReportsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Descartar')).toBeInTheDocument();
       expect(screen.getByText('Suspender')).toBeInTheDocument();
       expect(screen.getByText('Resolver caso')).toBeInTheDocument();
     });
+  });
+
+  it('no muestra el botón Descartar a nivel de grupo (solo aparece por denuncia individual)', async () => {
+    mockFetchReports.mockResolvedValue(SAMPLE_PAGE);
+
+    render(<ReportsPage />);
+
+    await waitFor(() => screen.getByText('Suspender'));
+
+    // Descartar no debe aparecer sin expandir el acordeón
+    expect(screen.queryByText('Descartar')).not.toBeInTheDocument();
   });
 
   // ── Acordeón ─────────────────────────────────────────────────────────────
@@ -143,20 +153,54 @@ describe('ReportsPage', () => {
     expect(screen.getByText('"Me amenazó por privado"')).toBeInTheDocument();
   });
 
-  // ── Acción: Descartar ─────────────────────────────────────────────────────
+  // ── Acción: Descartar denuncia individual ─────────────────────────────────
 
-  it('llama a discardReports con el reportedId al hacer click en Descartar', async () => {
+  it('cada denuncia individual tiene un botón Descartar cuando el acordeón está expandido', async () => {
     mockFetchReports.mockResolvedValue(SAMPLE_PAGE);
-    mockDiscardReports.mockResolvedValue({ message: 'Descartado' });
+
+    render(<ReportsPage />);
+
+    await waitFor(() => screen.getByText('▶'));
+    fireEvent.click(screen.getByText('▶'));
+
+    const descartarBtns = screen.getAllByText('Descartar');
+    expect(descartarBtns).toHaveLength(SAMPLE_GROUP.reports.length);
+  });
+
+  it('llama a discardReport con el id de la denuncia al hacer click en Descartar individual', async () => {
+    mockFetchReports.mockResolvedValue(SAMPLE_PAGE);
+    mockDiscardReport.mockResolvedValue({ message: 'Denuncia descartada.' });
     mockFetchReports.mockResolvedValueOnce(SAMPLE_PAGE).mockResolvedValueOnce(EMPTY_PAGE);
 
     render(<ReportsPage />);
 
-    await waitFor(() => screen.getByText('Descartar'));
-    fireEvent.click(screen.getByText('Descartar'));
+    await waitFor(() => screen.getByText('▶'));
+    fireEvent.click(screen.getByText('▶'));
+
+    const descartarBtns = screen.getAllByText('Descartar');
+    fireEvent.click(descartarBtns[0]);
 
     await waitFor(() => {
-      expect(mockDiscardReports).toHaveBeenCalledWith('uuid-reported-1');
+      expect(mockDiscardReport).toHaveBeenCalledWith('rep-1');
+    });
+  });
+
+  it('el botón Descartar de una denuncia no bloquea el botón de otra denuncia', async () => {
+    mockFetchReports.mockResolvedValue(SAMPLE_PAGE);
+    // discardReport never resolves during this test (simulates loading)
+    mockDiscardReport.mockReturnValue(new Promise(() => {}));
+
+    render(<ReportsPage />);
+
+    await waitFor(() => screen.getByText('▶'));
+    fireEvent.click(screen.getByText('▶'));
+
+    const descartarBtns = screen.getAllByText('Descartar');
+    fireEvent.click(descartarBtns[0]);
+
+    await waitFor(() => {
+      // The second button ('rep-2') should still be enabled
+      expect(descartarBtns[1]).not.toBeDisabled();
     });
   });
 

@@ -123,6 +123,9 @@ export const suspendFromReports = (reportedId: string, reason: string) =>
 export const resolveReports = (reportedId: string) =>
   apiClient.post(`/api/admin/reports/${reportedId}/resolve`).then(r => r.data);
 
+export const discardReport = (reportId: string) =>
+  apiClient.post(`/api/admin/reports/report/${reportId}/discard`).then(r => r.data);
+
 // ── Admins (H1) ──────────────────────────────────────────────────────────────
 
 export const fetchAdmins = () =>

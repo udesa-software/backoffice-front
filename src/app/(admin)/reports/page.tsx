@@ -3,9 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   fetchReports,
-  discardReports,
   suspendFromReports,
   resolveReports,
+  discardReport,
   ReportGroup,
 } from '@/api/admin';
 
@@ -75,9 +75,13 @@ function SuspendModal({
 function ReportRow({
   group,
   onAction,
+  onDiscardReport,
+  discardingReportIds,
 }: {
   group: ReportGroup;
-  onAction: (reportedId: string, action: 'discard' | 'suspend' | 'resolve') => void;
+  onAction: (reportedId: string, action: 'suspend' | 'resolve') => void;
+  onDiscardReport: (reportId: string) => void;
+  discardingReportIds: Set<string>;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -121,12 +125,6 @@ function ReportRow({
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
             <button
-              onClick={() => onAction(group.reported_id, 'discard')}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors"
-            >
-              Descartar
-            </button>
-            <button
               onClick={() => onAction(group.reported_id, 'suspend')}
               className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-600/20 text-red-400 hover:bg-red-600/40 hover:text-red-300 transition-colors"
             >
@@ -162,6 +160,13 @@ function ReportRow({
                   {r.reason_detail && (
                     <span className="text-white/50 italic">"{r.reason_detail}"</span>
                   )}
+                  <button
+                    onClick={() => onDiscardReport(r.id)}
+                    disabled={discardingReportIds.has(r.id)}
+                    className="ml-auto shrink-0 px-2 py-0.5 rounded text-xs bg-white/10 text-white/50 hover:bg-white/20 hover:text-white/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {discardingReportIds.has(r.id) ? '...' : 'Descartar'}
+                  </button>
                 </div>
               ))}
             </div>
@@ -178,6 +183,7 @@ export default function ReportsPage() {
   const [page, setPage]         = useState(1);
   const [loading, setLoading]   = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [discardingReportIds, setDiscardingReportIds] = useState<Set<string>>(new Set());
 
   // Modal de suspensión
   const [suspendTarget, setSuspendTarget] = useState<{ id: string; username: string } | null>(null);
@@ -201,7 +207,7 @@ export default function ReportsPage() {
 
   useEffect(() => { load(1); }, [load]);
 
-  const handleAction = useCallback((reportedId: string, action: 'discard' | 'suspend' | 'resolve') => {
+  const handleAction = useCallback((reportedId: string, action: 'suspend' | 'resolve') => {
     if (action === 'suspend') {
       const group = groups.find(g => g.reported_id === reportedId);
       setSuspendTarget({ id: reportedId, username: group?.reported_username ?? reportedId });
@@ -210,13 +216,11 @@ export default function ReportsPage() {
     executeAction(reportedId, action);
   }, [groups]);
 
-  async function executeAction(reportedId: string, action: 'discard' | 'suspend' | 'resolve', reason?: string) {
+  async function executeAction(reportedId: string, action: 'suspend' | 'resolve', reason?: string) {
     setActionError(null);
     try {
-      if (action === 'discard')  await discardReports(reportedId);
       if (action === 'suspend')  await suspendFromReports(reportedId, reason!);
       if (action === 'resolve')  await resolveReports(reportedId);
-      // Recargar la misma página; si queda vacía, volver a la anterior
       await load(page);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })
@@ -225,12 +229,31 @@ export default function ReportsPage() {
     }
   }
 
+  const handleDiscardReport = useCallback(async (reportId: string) => {
+    setDiscardingReportIds(prev => new Set(prev).add(reportId));
+    setActionError(null);
+    try {
+      await discardReport(reportId);
+      await load(page);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })
+        ?.response?.data?.error ?? 'Error al descartar la denuncia.';
+      setActionError(msg);
+    } finally {
+      setDiscardingReportIds(prev => {
+        const next = new Set(prev);
+        next.delete(reportId);
+        return next;
+      });
+    }
+  }, [load, page]);
+
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-1">Gestión de Denuncias</h1>
-      <p className="text-white/40 text-sm mb-6">
+      <h1 className="text-2xl font-bold text-gray-900 mb-1">Gestión de Denuncias</h1>
+      <p className="text-gray-500 text-sm mb-6">
         Casos pendientes ordenados por severidad (cantidad de reportes recibidos).
       </p>
 
@@ -272,6 +295,8 @@ export default function ReportsPage() {
                     key={group.reported_id}
                     group={group}
                     onAction={handleAction}
+                    onDiscardReport={handleDiscardReport}
+                    discardingReportIds={discardingReportIds}
                   />
                 ))}
               </tbody>
