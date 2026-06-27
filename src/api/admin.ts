@@ -78,6 +78,44 @@ export const fetchMetrics = () =>
 export const fetchServicesHealth = () =>
   apiClient.get<{ services: ServiceStatus[] }>('/api/admin/services/health').then(r => r.data);
 
+// ── Denuncias (H7) ───────────────────────────────────────────────────────────
+
+export interface ReportEntry {
+  id: string;
+  reporter_username: string;
+  reason: string;
+  reason_detail: string | null;
+  reported_at: string;
+}
+
+export interface ReportGroup {
+  reported_id: string;
+  reported_username: string;
+  total_reports: number;
+  distinct_reporters: number;
+  last_reported_at: string;
+  reports: ReportEntry[];
+}
+
+export interface ReportsPage {
+  groups: ReportGroup[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export const fetchReports = (params?: { page?: number; limit?: number }) =>
+  apiClient.get<ReportsPage>('/api/admin/reports', { params }).then(r => r.data);
+
+export const discardReports = (reportedId: string) =>
+  apiClient.post(`/api/admin/reports/${reportedId}/discard`).then(r => r.data);
+
+export const suspendFromReports = (reportedId: string, reason: string) =>
+  apiClient.post(`/api/admin/reports/${reportedId}/suspend`, { reason }).then(r => r.data);
+
+export const resolveReports = (reportedId: string) =>
+  apiClient.post(`/api/admin/reports/${reportedId}/resolve`).then(r => r.data);
+
 // ── Admins (H1) ──────────────────────────────────────────────────────────────
 
 export const fetchAdmins = () =>
