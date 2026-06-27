@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { fetchUsers, type AppUser } from '@/api/admin';
+import { fetchUsers, exportUsersCsv, type AppUser } from '@/api/admin';
 
 // ── Badge de estado de cuenta ─────────────────────────────────────────────────
 function StatusBadge({ user }: { user: AppUser }) {
@@ -30,6 +30,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [adminRole, setAdminRole] = useState('');
   const LIMIT = 20;
 
   const load = useCallback(async (q: string, p: number) => {
@@ -44,7 +45,9 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    if (!localStorage.getItem('adminData')) { router.push('/'); return; }
+    const stored = localStorage.getItem('adminData');
+    if (!stored) { router.push('/'); return; }
+    setAdminRole(JSON.parse(stored).role ?? '');
     load(search, page);
   }, [router, load, search, page]);
 
@@ -60,6 +63,20 @@ export default function UsersPage() {
 
   const totalPages = Math.ceil(total / LIMIT);
 
+  const handleExport = async () => {
+    try {
+      const blob = await exportUsersCsv(search);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'usuarios.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Error al exportar. Verificá tu conexión.');
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -67,6 +84,15 @@ export default function UsersPage() {
           <h1 className="text-2xl font-bold text-gray-900">Usuarios</h1>
           <p className="text-sm text-gray-500 mt-0.5">{total} usuarios registrados</p>
         </div>
+        {/* H8 CA.2: solo visible para superadmin */}
+        {adminRole === 'superadmin' && (
+          <button
+            onClick={handleExport}
+            className="px-4 py-2 rounded-lg bg-[#6C63FF] text-white text-sm font-medium hover:bg-[#4B44CC] transition-colors"
+          >
+            Exportar CSV
+          </button>
+        )}
       </div>
 
       {/* H4 CA.2: búsqueda parcial */}
