@@ -68,6 +68,13 @@ export const unsuspendUser = (id: string, reason?: string) =>
 export const resolveUserReview = (id: string, reason?: string) =>
   apiClient.post(`/api/admin/users/${id}/resolve-review`, { reason }).then(r => r.data);
 
+// H8: descarga CSV de usuarios (superadmin only — backend devuelve 403 para otros roles)
+export const exportUsersCsv = (search = '') =>
+  apiClient.get('/api/admin/users/export', {
+    params: { search },
+    responseType: 'blob',
+  }).then(r => r.data);
+
 // ── Métricas (H3) ─────────────────────────────────────────────────────────────
 
 export const fetchMetrics = () =>
